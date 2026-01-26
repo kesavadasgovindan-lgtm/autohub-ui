@@ -5,6 +5,9 @@ import AuthLayout from "./layouts/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Employees from "./pages/Employees";
 import Billing from "./pages/Billing";
+import QuotationList from "./pages/quotations/QuotationList";
+import QuotationForm from "./pages/billing/QuotationForm";
+
 
 
 
@@ -53,6 +56,25 @@ function App() {
     </ProtectedRoute>
   }
 />
+
+<Route
+  path="/quotations"
+  element={
+    <ProtectedRoute>
+      <QuotationList />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/quotations/new"
+  element={
+    <ProtectedRoute>
+      <QuotationForm />
+    </ProtectedRoute>
+  }
+/>
+
 
 
 

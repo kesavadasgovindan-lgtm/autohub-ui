@@ -21,7 +21,8 @@ function Sidebar() {
           </>
         )}
 
-        {/* STAFF MENU */}
+        {/* COMMON MENU */}
+        <NavLink to="/quotations">Quotations</NavLink>
         <NavLink to="/billing">Billing</NavLink>
 
       </nav>

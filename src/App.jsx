@@ -52,10 +52,11 @@ function App() {
   path="/billing"
   element={
     <ProtectedRoute>
-      <Billing />
+      <QuotationForm mode="invoice" />
     </ProtectedRoute>
   }
 />
+
 
 <Route
   path="/quotations"
@@ -70,10 +71,11 @@ function App() {
   path="/quotations/new"
   element={
     <ProtectedRoute>
-      <QuotationForm />
+      <QuotationForm mode="quotation" />
     </ProtectedRoute>
   }
 />
+
 
 
 

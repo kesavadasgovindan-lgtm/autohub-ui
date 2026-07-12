@@ -1,10 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import AppLayout from "../../layouts/AppLayout";
-
-
-
 
 export default function BillingForm({ mode }) {
   const isQuotation = mode === "quotation";
@@ -12,11 +8,47 @@ export default function BillingForm({ mode }) {
   const [customerId, setCustomerId] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
   const [remarks, setRemarks] = useState("");
-
   const [items, setItems] = useState([]);
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ SINGLE SOURCE OF TRUTH
+  const invoiceId = new URLSearchParams(location.search).get("invoiceId");
+
+  // ✅ LOAD INVOICE WHEN OPENED FROM QUOTATION
+  useEffect(() => {
+    if (!invoiceId) return;
+
+    const loadInvoice = async () => {
+      const res = await fetch(
+        `http://localhost:5119/api/invoices/${invoiceId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+
+      setCustomerId(data.customerId);
+      setVehicleNo(data.vehicleNo ?? "");
+      setRemarks(data.remarks ?? "");
+
+      setItems(
+        data.items.map(i => ({
+          description: i.description,
+          rate: i.rate,
+          quantity: i.quantity,
+          isLabour: i.isLabour
+        }))
+      );
+    };
+
+    loadInvoice();
+  }, [invoiceId, token]);
 
   const addItem = () => {
     setItems([
@@ -71,10 +103,7 @@ export default function BillingForm({ mode }) {
     if (isQuotation) {
       navigate("/quotations");
     } else {
-      setCustomerId("");
-      setVehicleNo("");
-      setRemarks("");
-      setItems([]);
+      navigate("/billing");
     }
   };
 
@@ -148,7 +177,9 @@ export default function BillingForm({ mode }) {
           </div>
         ))}
 
-        <button className="add-btn" onClick={addItem}>+ Add Item</button>
+        <button className="add-btn" onClick={addItem}>
+          + Add Item
+        </button>
       </div>
 
       {/* TOTAL */}
@@ -158,15 +189,13 @@ export default function BillingForm({ mode }) {
 
       {/* ACTIONS */}
       <div className="billing-actions">
-        {isQuotation && (
-           <button className="primary" onClick={save}>
+        <button className="primary" onClick={save}>
           {isQuotation ? "Save Quotation" : "Save Invoice"}
         </button>
-        )}
+
         <button className="secondary" onClick={cancel}>
-            Cancel
-          </button>
-       
+          Cancel
+        </button>
       </div>
     </AppLayout>
   );

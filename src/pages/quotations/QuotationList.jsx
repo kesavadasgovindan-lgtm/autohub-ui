@@ -1,41 +1,82 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "../../layouts/AppLayout";
-import "./quotation.css";
-
+import "../../styles/quotation.css";
+import { getUserRole } from "../../utils/auth";
 
 export default function QuotationList() {
   const [quotations, setQuotations] = useState([]);
+  const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
+  const role = getUserRole();
+
+  const loadQuotations = async () => {
+    const res = await fetch("http://localhost:5119/api/quotations", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    setQuotations(data);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const res = await fetch("http://localhost:5119/api/quotations", {
+    loadQuotations();
+  }, []);
+
+  const approveQuotation = async (id) => {
+    const confirm = window.confirm("Approve this quotation?");
+    if (!confirm) return;
+
+    await fetch(`http://localhost:5119/api/quotations/${id}/approve`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    loadQuotations();
+  };
+
+  // ✅ CONVERT QUOTATION → INVOICE
+  const convertQuotation = async (id) => {
+    const confirm = window.confirm(
+      "Convert this quotation to invoice?"
+    );
+    if (!confirm) return;
+
+    const res = await fetch(
+      `http://localhost:5119/api/quotations/${id}/convert`,
+      {
+        method: "POST",
         headers: {
-         Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
-      });
+      }
+    );
 
-      const data = await res.json();
-      setQuotations(data);
-    };
+    const data = await res.json();
 
-    load();
-  }, [token]);
+    // 🔽 navigate to billing with invoice id
+    
+    navigate(`/billing?invoiceId=${data.id}`);
+
+  };
 
   return (
     <AppLayout>
-      <h1>Quotations</h1>
+      <div className="page-header">
+        <h1>Quotations</h1>
 
-   
-
-  <button
-    className="primary-btn"
-    onClick={() => window.location.href = "/quotations/new"}
-  >
-    + Create Quotation
-  </button>
-
+        <button
+          className="primary-btn"
+          onClick={() => navigate("/quotations/new")}
+        >
+          + Create Quotation
+        </button>
+      </div>
 
       <div className="table-container">
         <table className="dark-table">
@@ -45,6 +86,7 @@ export default function QuotationList() {
               <th>Customer</th>
               <th>Status</th>
               <th>Amount</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -53,8 +95,36 @@ export default function QuotationList() {
               <tr key={q.id}>
                 <td>{q.quotationNumber}</td>
                 <td>{q.customer?.name}</td>
-                <td>{q.status}</td>
+
+                <td>
+                  <span className={`status-badge ${q.status.toLowerCase()}`}>
+                    {q.status}
+                  </span>
+                </td>
+
                 <td>{q.netAmount}</td>
+
+                <td>
+                  {/* ADMIN APPROVAL */}
+                  {role === "Admin" && q.status === "Draft" && (
+                    <button
+                      className="secondary-btn"
+                      onClick={() => approveQuotation(q.id)}
+                    >
+                      Approve
+                    </button>
+                  )}
+
+                  {/* CONVERT TO INVOICE */}
+                  {q.status === "Approved" && (
+                    <button
+                      className="primary-btn"
+                      onClick={() => convertQuotation(q.id)}
+                    >
+                      Convert
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

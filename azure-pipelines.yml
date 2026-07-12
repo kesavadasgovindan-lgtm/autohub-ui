@@ -1,0 +1,26 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- checkout: self
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+
+- script: npm install
+  displayName: Install Dependencies
+
+- script: npm run build
+  displayName: Build React Application
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish React Build Artifact
+
+  inputs:
+    targetPath: 'dist'
+    artifact: 'react-build'

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "../../layouts/AppLayout";
 import "../../styles/quotation.css";
@@ -11,20 +11,21 @@ export default function QuotationList() {
   const token = localStorage.getItem("token");
   const role = getUserRole();
 
-  const loadQuotations = async () => {
+ const loadQuotations = useCallback(async () => {
     const res = await fetch("http://localhost:5119/api/quotations", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
     });
 
     const data = await res.json();
     setQuotations(data);
-  };
+}, [token]);
 
-  useEffect(() => {
+ useEffect(() => {
     loadQuotations();
-  }, []);
+}, [loadQuotations]);
+
 
   const approveQuotation = async (id) => {
     const confirm = window.confirm("Approve this quotation?");
@@ -59,7 +60,7 @@ export default function QuotationList() {
 
     const data = await res.json();
 
-    // 🔽 navigate to billing with invoice id
+    // 🔽 navigate to billing with invoice ID
     
     navigate(`/billing?invoiceId=${data.id}`);
 

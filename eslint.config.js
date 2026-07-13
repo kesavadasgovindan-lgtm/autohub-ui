@@ -22,8 +22,14 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
-    rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
-    },
+  rules: {
+  'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+
+  // Keep exhaustive-deps
+  'react-hooks/exhaustive-deps': 'warn',
+
+  // Disable this new React 19 rule
+  'react-hooks/set-state-in-effect': 'off',
+},
   },
 ])

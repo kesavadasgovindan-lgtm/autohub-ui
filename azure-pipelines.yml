@@ -5,22 +5,28 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-
 - checkout: self
 
 - task: NodeTool@0
   inputs:
     versionSpec: '20.x'
 
-- script: npm install
+- script: npm ci
   displayName: Install Dependencies
+
+- script: npm run lint
+  displayName: Run ESLint
 
 - script: npm run build
   displayName: Build React Application
 
-- task: PublishPipelineArtifact@1
-  displayName: Publish React Build Artifact
-
+- task: CopyFiles@2
   inputs:
-    targetPath: 'dist'
+    SourceFolder: '$(Build.SourcesDirectory)/dist'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: 'react-build'

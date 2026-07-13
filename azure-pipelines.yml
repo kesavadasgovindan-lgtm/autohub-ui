@@ -32,15 +32,19 @@ stages:
     - script: npm run build
       displayName: Build React App
 
-    - task: CopyFiles@2
+    - task: ArchiveFiles@2
+      displayName: Archive React Build
       inputs:
-        SourceFolder: '$(Build.SourcesDirectory)/dist'
-        Contents: '**'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/react.zip'
+        replaceExistingArchive: true
 
     - task: PublishPipelineArtifact@1
+      displayName: Publish Build Artifact
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)'
+        targetPath: '$(Build.ArtifactStagingDirectory)/react.zip'
         artifact: 'react-build'
 
 # -------------------------------
@@ -75,4 +79,4 @@ stages:
               azureSubscription: 'autohub'
               appType: webAppLinux
               appName: 'auto-hub'
-              package: '$(Pipeline.Workspace)/react-build'
+              package: '$(Pipeline.Workspace)/react-build/react.zip'

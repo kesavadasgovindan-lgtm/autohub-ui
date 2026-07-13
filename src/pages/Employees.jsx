@@ -11,6 +11,19 @@ function Employees() {
   role: "Staff"
 });
 
+  const fetchEmployees = async () => {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:5119/api/employees", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+    setEmployees(data);
+  };
+
 const saveEmployee = async () => {
   const token = localStorage.getItem("token");
 
@@ -40,18 +53,7 @@ const saveEmployee = async () => {
     fetchEmployees();
   }, []);
 
-  const fetchEmployees = async () => {
-    const token = localStorage.getItem("token");
 
-    const response = await fetch("http://localhost:5119/api/employees", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await response.json();
-    setEmployees(data);
-  };
 
   return (
     <AppLayout>

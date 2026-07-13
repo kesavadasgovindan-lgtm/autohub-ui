@@ -4,29 +4,75 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- checkout: self
+stages:
 
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-
-- script: npm ci
-  displayName: Install Dependencies
-
-- script: npm run lint
-  displayName: Run ESLint
-
-- script: npm run build
+# -------------------------------
+# Stage 1 - Build
+# -------------------------------
+- stage: Build
   displayName: Build React Application
 
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(Build.SourcesDirectory)/dist'
-    Contents: '**'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  jobs:
+  - job: Build
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: 'react-build'
+    steps:
+
+    - checkout: self
+
+    - task: UseNode@1
+      inputs:
+        version: '20.x'
+
+    - script: npm ci
+      displayName: Install Dependencies
+
+    - script: npm run lint
+      displayName: Run ESLint
+
+    - script: npm run build
+      displayName: Build React App
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/dist'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'react-build'
+
+# -------------------------------
+# Stage 2 - Deploy
+# -------------------------------
+- stage: Deploy
+  displayName: Deploy to Azure App Service
+
+  dependsOn: Build
+
+  jobs:
+
+  - deployment: DeployWeb
+
+    environment: Development
+
+    strategy:
+
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - download: current
+            artifact: react-build
+
+          - task: AzureWebApp@1
+            displayName: Deploy React App
+
+            inputs:
+              azureSubscription: 'autohub'
+              appType: webAppLinux
+              appName: 'auto-hub'
+              package: '$(Pipeline.Workspace)/react-build'
